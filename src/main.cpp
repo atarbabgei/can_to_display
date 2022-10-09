@@ -8,13 +8,17 @@
 #include <SPI.h>
 #include "mcp2515_can.h"
 
+// Choose SERIAL PORT MONITOR (Internal USB Serial) or Serial1 (Out)
+#define OUTSERIAL SERIAL_PORT_MONITOR 
+//#define OUTSERIAL Serial1
+
 struct Dash_data{
   int v_speed;
   int v_battery;
   int v_temperature;
 };
 
-const int SPI_CS_PIN = 10;
+const int SPI_CS_PIN = 9;
 const int CAN_INT_PIN = 2;
 mcp2515_can CAN(SPI_CS_PIN); // Set CS pin
 
@@ -29,16 +33,17 @@ int map_one_byte(int x, int in_min, int in_max, int out_min, int out_max) {
 }
 
 void setup() {
-    Serial1.begin(SERIAL_BAUD);
+    OUTSERIAL.begin(SERIAL_BAUD);
     Dash_data m_dash_data;
+    while (!SERIAL_PORT_MONITOR) {}
     
     // init can bus : baudrate = 250k, MCP XTAL 8 MHz (Mini Module) 
     while (CAN_OK != CAN.begin(CAN_SPEED, MCP_8MHz)) {             
         //SERIAL_PORT_MONITOR.println(F("CAN init fail, retry..."));
-        Serial1.println("CAN init fail, retry...");
+        OUTSERIAL.println("CAN init fail, retry...");
         delay(100);
     }
-   Serial1.println("CAN init ok!");
+   OUTSERIAL.println("CAN init ok!");
 
    // Set CAN Mask
    CAN.init_Mask(0, 1, 0x0CFFFFFF);                         
@@ -64,30 +69,30 @@ void loop() {
     CAN.readMsgBuf(&len, raw_data);
 
     if(CAN.getCanId()==VCU_ADDRESS_1){
-      Serial1.println("Address 1");
+      OUTSERIAL.println("Address 1");
       
       for (int i = 0; i < len; i++) { // print the data
-            Serial1.print(raw_data[i]);
-            Serial1.print("\t");
+            OUTSERIAL.print(raw_data[i]);
+            OUTSERIAL.print("\t");
         }
-      Serial1.println(" ");
+      OUTSERIAL.println(" ");
      }
     else if(CAN.getCanId()==VCU_ADDRESS_2){
-      Serial1.println("Address 2");
+      OUTSERIAL.println("Address 2");
       
       for (int i = 0; i < len; i++) { // print the data
-            Serial1.print(raw_data[i]);
-            Serial1.print("\t");
+            OUTSERIAL.print(raw_data[i]);
+            OUTSERIAL.print("\t");
         }
-      Serial1.println(" ");
+      OUTSERIAL.println(" ");
      }
    else{
-      Serial1.println("Others");
+      OUTSERIAL.println("Others");
     
       for (int i = 0; i < len; i++) { // print the data
-            Serial1.print(raw_data[i]);
-            Serial1.print("\t");
+            OUTSERIAL.print(raw_data[i]);
+            OUTSERIAL.print("\t");
         }
-      Serial1.println(" ");
+      OUTSERIAL.println(" ");
      }
 }
